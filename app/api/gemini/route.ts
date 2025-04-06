@@ -1,21 +1,21 @@
-//src/app/api/gemini/route.ts
+//src/app/api/route.ts
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 //Commenting out your stuff for debugging purposes, you can uncomment it when needed.
 //const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY!);
-const TimgenAI = new GoogleGenAI({ apiKey: "INSERT YOUR KEY HERE"});
+const TimgenAI = new GoogleGenAI({ apiKey: "INSERT YOUR API KEY HERE" }); // Replace with your actual API key or use process.env.GEMINI_API_KEY if set in your environment variables.
 // Initialize model
 
 //const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // You can change to "gemini-1.5-pro-latest" if needed
-
+console.log("Endpoint reached: /api/gemini/route.ts");
 export async function POST(req: NextRequest) {
   try {
-    //const { prompt } = await req.json();
-    const prompt  = "Why is the sky blue?";
+   const  prompt  = await req.json();
+    
     console.log("Received prompt:", prompt);
     const result = await TimgenAI.models.generateContent({
-      model: "gemini-pro", // You can change to "gemini-pro" or other models as needed
-      contents: [{ role: "user", parts: [{ text: prompt }] }], // The contents array should contain the user prompt. Gemini will generate a response based on this.
+      model: "gemini-2.0-flash", 
+      contents: prompt, // Contents is expecting json with a "text" field, e.g. { "text": "Your prompt here" }
       config: {
         temperature: 0.8,
         topP: 0.95,
