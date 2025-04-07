@@ -2,140 +2,185 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, Lightbulb, FileText, Target, BookOpen, Settings, Menu, Activity } from "lucide-react"
-import { useMobile } from "@/hooks/use-mobile"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { NotificationSystem } from "@/components/notification-system"
+import { Home, BarChart3, FileText, Settings, Menu, Target, Sparkles, Award } from "lucide-react"
 
-interface DashboardLayoutProps {
-  children: React.ReactNode
+interface NavItem {
+  title: string
+  href: string
+  icon: React.ReactNode
+  label?: string
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const isMobile = useMobile()
-  const [isOpen, setIsOpen] = useState(false)
-  const [userName, setUserName] = useState("Sarah")
+  const isMobile = useIsMobile()
 
-  const routes = [
+  const navItems: NavItem[] = [
     {
+      title: "Home",
       href: "/",
-      label: "Home",
-      icon: Home,
-      active: pathname === "/",
+      icon: <Home className="h-5 w-5" />,
     },
     {
+      title: "Wellness Tracking",
       href: "/wellness-tracking",
-      label: "Wellness Tracking",
-      icon: Activity,
-      active: pathname === "/wellness-tracking",
+      icon: <BarChart3 className="h-5 w-5" />,
     },
     {
+      title: "AI Insights",
       href: "/ai-insights",
-      label: "AI Insights",
-      icon: Lightbulb,
-      active: pathname === "/ai-insights",
+      icon: <Sparkles className="h-5 w-5" />,
     },
     {
+      title: "Medical Records",
       href: "/medical-records",
-      label: "Medical Records",
-      icon: FileText,
-      active: pathname === "/medical-records",
+      icon: <FileText className="h-5 w-5" />,
     },
     {
+      title: "Goals",
       href: "/goals",
-      label: "Goals",
-      icon: Target,
-      active: pathname === "/goals",
+      icon: <Target className="h-5 w-5" />,
     },
     {
+      title: "Journal",
       href: "/journal",
-      label: "Journal",
-      icon: BookOpen,
-      active: pathname === "/journal",
+      icon: <FileText className="h-5 w-5" />,
     },
     {
+      title: "Achievements",
+      href: "/achievements",
+      icon: <Award className="h-5 w-5" />,
+      label: "New",
+    },
+    {
+      title: "Settings",
       href: "/settings",
-      label: "Settings",
-      icon: Settings,
-      active: pathname === "/settings",
+      icon: <Settings className="h-5 w-5" />,
     },
   ]
 
-  // Close sheet when route changes on mobile
-  useEffect(() => {
-    setIsOpen(false)
-  }, [pathname])
-
-  const Sidebar = (
-    <div className="flex h-full w-full flex-col gap-2">
-      <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="text-xl font-bold">Mynd Bodi</span>
-        </Link>
-      </div>
-      <div className="flex-1">
-        <ScrollArea className="h-[calc(100vh-56px)]">
-          <div className="px-2 py-2">
-            <nav className="grid gap-1">
-              {routes.map((route) => (
-                <Link
-                  key={route.href}
-                  href={route.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    route.active ? "bg-primary text-primary-foreground" : "hover:bg-muted",
-                  )}
-                >
-                  <route.icon className="h-5 w-5" />
-                  {route.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-        </ScrollArea>
-      </div>
-    </div>
-  )
-
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      {isMobile ? (
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static lg:h-[60px] lg:px-6">
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <div className="flex min-h-screen flex-col">
+      {/* Mobile header */}
+      {isMobile && (
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+          <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+              <Button variant="outline" size="icon" className="shrink-0">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[240px] sm:w-[300px]">
-              {Sidebar}
+            <SheetContent side="left" className="flex flex-col p-0">
+              <div className="flex h-14 items-center border-b px-4">
+                <Link href="/" className="flex items-center gap-2">
+                  <Image
+                    src="/images/mbi-logo.svg"
+                    alt="Mynd Bodi Institute"
+                    width={100}
+                    height={32}
+                    className="h-8 w-auto"
+                  />
+                </Link>
+              </div>
+              <ScrollArea className="flex-1">
+                <nav className="flex flex-col gap-2 p-4">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                        pathname === item.href ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                      )}
+                    >
+                      {item.icon}
+                      {item.title}
+                      {item.label && (
+                        <span className="ml-auto rounded bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">
+                          {item.label}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </nav>
+              </ScrollArea>
             </SheetContent>
           </Sheet>
-          <div className="flex w-full items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
-              <span className="text-xl font-bold">Mynd Bodi</span>
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <div className="text-sm font-medium">Hello, {userName}</div>
-              </div>
-            </div>
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/images/mbi-logo.svg"
+              alt="Mynd Bodi Institute"
+              width={100}
+              height={32}
+              className="h-8 w-auto"
+            />
+          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <NotificationSystem />
           </div>
         </header>
-      ) : null}
+      )}
+
       <div className="flex flex-1">
+        {/* Desktop sidebar */}
         {!isMobile && (
-          <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r bg-background md:block">{Sidebar}</aside>
+          <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r bg-background md:flex">
+            <div className="flex h-auto items-center justify-center border-b py-4">
+              <Link href="/" className="flex items-center justify-center py-2">
+                <Image
+                  src="/images/mbi-logo.svg"
+                  alt="Mynd Bodi Institute"
+                  width={120}
+                  height={30}
+                  className="h-30 w-auto py-2"
+                />
+              </Link>
+            </div>
+            <ScrollArea className="flex-1">
+              <nav className="flex flex-col gap-2 p-4">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                      pathname === item.href ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    {item.icon}
+                    {item.title}
+                    {item.label && (
+                      <span className="ml-auto rounded bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">
+                        {item.label}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </nav>
+            </ScrollArea>
+          </aside>
         )}
-        <main className={cn("flex-1", !isMobile && "md:pl-64")}>
-          <div className="container mx-auto p-4 md:p-6">{children}</div>
+
+        <main className="flex flex-1 flex-col md:pl-64">
+          {/* Desktop header */}
+          {!isMobile && (
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-6">
+              <div className="ml-auto flex items-center gap-4">
+                <NotificationSystem />
+              </div>
+            </header>
+          )}
+          <div className="flex-1 space-y-4 p-4 md:p-8">{children}</div>
         </main>
       </div>
     </div>
