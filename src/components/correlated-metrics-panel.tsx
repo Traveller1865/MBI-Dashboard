@@ -1,16 +1,21 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ZAxis } from "recharts"
-import { Activity, Droplets, Moon, Flame, Brain } from "lucide-react"
+import { useState, useEffect } from "react"
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle,
+} from "@/components/ui/card"
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select"
+import {
+  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ZAxis,
+} from "recharts"
+import {
+  Activity, Droplets, Moon, Flame, Brain,
+} from "lucide-react"
+import { fetchGeminiCorrelationInsight } from "@/lib/gemini-correlation-service"
 
-interface CorrelatedMetricsPanelProps {
-  timeRange: string
-}
-
-// Sample correlation data
 const correlationData = {
   sleepActivity: [
     { x: 5.5, y: 6500, z: 10, name: "Mon" },
@@ -50,6 +55,7 @@ const correlationData = {
   ],
 }
 
+
 const correlationOptions = [
   {
     id: "sleepActivity",
@@ -58,7 +64,7 @@ const correlationOptions = [
     yLabel: "Steps Count",
     description: "How sleep duration affects daily activity levels",
     icon: Moon,
-    insight: "You tend to be more active on days following 7+ hours of sleep.",
+    strength: 78,
   },
   {
     id: "hydrationPerformance",
@@ -67,7 +73,7 @@ const correlationOptions = [
     yLabel: "Performance Score",
     description: "Impact of hydration on overall performance",
     icon: Droplets,
-    insight: "Higher water intake correlates with better performance scores.",
+    strength: 85,
   },
   {
     id: "hrvRecovery",
@@ -76,7 +82,7 @@ const correlationOptions = [
     yLabel: "Recovery Score",
     description: "Relationship between HRV and recovery metrics",
     icon: Activity,
-    insight: "Higher HRV values typically predict better recovery scores.",
+    strength: 72,
   },
   {
     id: "caloriesWeight",
@@ -85,17 +91,43 @@ const correlationOptions = [
     yLabel: "Weight (kg)",
     description: "How caloric intake relates to weight changes",
     icon: Flame,
-    insight: "Consistent caloric deficit shows gradual weight reduction.",
+    strength: 65,
   },
 ]
 
-export default function CorrelatedMetricsPanel({ timeRange }: CorrelatedMetricsPanelProps) {
+export default function CorrelatedMetricsPanel({ timeRange }: { timeRange: string }) {
   const [selectedCorrelation, setSelectedCorrelation] = useState("sleepActivity")
+  const [keyInsight, setKeyInsight] = useState("")
+  const [recommendations, setRecommendations] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const currentOption = correlationOptions.find((option) => option.id === selectedCorrelation)
+  const currentOption = correlationOptions.find(opt => opt.id === selectedCorrelation)
   const currentData = correlationData[selectedCorrelation as keyof typeof correlationData]
-
   const IconComponent = currentOption?.icon || Activity
+
+  useEffect(() => {
+    async function generateInsight() {
+      if (!currentOption) return
+      setLoading(true)
+      try {
+        const result = await fetchGeminiCorrelationInsight({
+          xLabel: currentOption.xLabel,
+          yLabel: currentOption.yLabel,
+          description: currentOption.description,
+        })
+        setKeyInsight(result.insight)
+        setRecommendations(result.recommendation)
+      } catch (err) {
+        console.error("Error fetching insight:", err)
+        setKeyInsight("Unable to fetch insights at this time.")
+        setRecommendations("Please try again later.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    generateInsight()
+  }, [selectedCorrelation])
 
   return (
     <Card className="col-span-full">
@@ -120,8 +152,10 @@ export default function CorrelatedMetricsPanel({ timeRange }: CorrelatedMetricsP
         </div>
         <CardDescription>{currentOption?.description}</CardDescription>
       </CardHeader>
+
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Chart */}
           <div className="lg:col-span-3">
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -131,21 +165,13 @@ export default function CorrelatedMetricsPanel({ timeRange }: CorrelatedMetricsP
                     type="number"
                     dataKey="x"
                     name={currentOption?.xLabel}
-                    label={{
-                      value: currentOption?.xLabel,
-                      position: "insideBottom",
-                      offset: -10,
-                    }}
+                    label={{ value: currentOption?.xLabel, position: "insideBottom", offset: -10 }}
                   />
                   <YAxis
                     type="number"
                     dataKey="y"
                     name={currentOption?.yLabel}
-                    label={{
-                      value: currentOption?.yLabel,
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
+                    label={{ value: currentOption?.yLabel, angle: -90, position: "insideLeft" }}
                   />
                   <ZAxis type="number" dataKey="z" range={[60, 200]} name="score" />
                   <Tooltip
@@ -153,120 +179,44 @@ export default function CorrelatedMetricsPanel({ timeRange }: CorrelatedMetricsP
                     formatter={(value, name) => [value, name]}
                     labelFormatter={(label) => `Day: ${label}`}
                   />
-                  <Scatter name={currentOption?.title} data={currentData} fill="#8884d8" shape="circle" />
+                  <Scatter
+                    name={currentOption?.title}
+                    data={currentData}
+                    fill="#8884d8"
+                    shape="circle"
+                  />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="lg:col-span-1">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Key Insights</h3>
-                <p className="text-sm text-muted-foreground">{currentOption?.insight}</p>
-              </div>
 
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Correlation Strength</h3>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full"
-                      style={{
-                        width:
-                          selectedCorrelation === "sleepActivity"
-                            ? "78%"
-                            : selectedCorrelation === "hydrationPerformance"
-                              ? "85%"
-                              : selectedCorrelation === "hrvRecovery"
-                                ? "72%"
-                                : "65%",
-                      }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium">
-                    {selectedCorrelation === "sleepActivity"
-                      ? "78%"
-                      : selectedCorrelation === "hydrationPerformance"
-                        ? "85%"
-                        : selectedCorrelation === "hrvRecovery"
-                          ? "72%"
-                          : "65%"}
-                  </span>
+          {/* Insight + Recommendation + Strength */}
+          <div className="lg:col-span-1 space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Key Insights</h3>
+              <p className="text-sm text-muted-foreground">
+                {loading ? "Generating insight..." : keyInsight}
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Correlation Strength</h3>
+              <div className="flex items-center gap-2">
+                <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${currentOption?.strength || 0}%` }}
+                  />
                 </div>
+                <span className="text-sm font-medium">{(currentOption?.strength || 0)}%</span>
               </div>
+            </div>
 
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Recommendations</h3>
-                <ul className="text-sm text-muted-foreground space-y-2">
-                  {selectedCorrelation === "sleepActivity" && (
-                    <>
-                      <li className="flex items-start gap-2">
-                        <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                          <Moon className="h-3 w-3 text-primary" />
-                        </div>
-                        <span>Aim for 7-8 hours of sleep to maximize activity potential</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                          <Activity className="h-3 w-3 text-primary" />
-                        </div>
-                        <span>Consider lighter activity on days following poor sleep</span>
-                      </li>
-                    </>
-                  )}
-
-                  {selectedCorrelation === "hydrationPerformance" && (
-                    <>
-                      <li className="flex items-start gap-2">
-                        <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                          <Droplets className="h-3 w-3 text-primary" />
-                        </div>
-                        <span>Increase water intake to 3+ liters on training days</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                          <Brain className="h-3 w-3 text-primary" />
-                        </div>
-                        <span>Track hydration more closely when performance drops</span>
-                      </li>
-                    </>
-                  )}
-
-                  {selectedCorrelation === "hrvRecovery" && (
-                    <>
-                      <li className="flex items-start gap-2">
-                        <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                          <Activity className="h-3 w-3 text-primary" />
-                        </div>
-                        <span>Focus on recovery techniques when HRV drops below 45ms</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                          <Moon className="h-3 w-3 text-primary" />
-                        </div>
-                        <span>Prioritize sleep quality to improve HRV scores</span>
-                      </li>
-                    </>
-                  )}
-
-                  {selectedCorrelation === "caloriesWeight" && (
-                    <>
-                      <li className="flex items-start gap-2">
-                        <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                          <Flame className="h-3 w-3 text-primary" />
-                        </div>
-                        <span>Maintain a 300-500 calorie deficit for sustainable weight loss</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                          <Activity className="h-3 w-3 text-primary" />
-                        </div>
-                        <span>Increase activity on higher calorie days to maintain balance</span>
-                      </li>
-                    </>
-                  )}
-                </ul>
-              </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Recommendations</h3>
+              <p className="text-sm text-muted-foreground">
+                {loading ? "Generating recommendations..." : recommendations}
+              </p>
             </div>
           </div>
         </div>
@@ -274,4 +224,3 @@ export default function CorrelatedMetricsPanel({ timeRange }: CorrelatedMetricsP
     </Card>
   )
 }
-

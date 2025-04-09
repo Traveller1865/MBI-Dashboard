@@ -1,264 +1,202 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type React from "react"
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { fetchGeminiInsights } from "@/lib/gemini-insight-service"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from "recharts"
-import {
-  Brain,
   Heart,
-  Activity,
-  ArrowRight,
-  ThumbsUp,
+  BedDouble,
+  Footprints,
+  Droplets,
+  AlertTriangle,
+  MessageSquare,
+  Send,
+  Zap,
+  Award,
 } from "lucide-react"
+import InsightCard from "@/components/insight-card"
+import { InsightsPreferences } from "@/components/insights-preferences"
+import { askGeminiWithContext } from "@/lib/gemini-service"
+import { getUserHealthContext } from "@/lib/getUserHealthContext" // Import the utility
 
-type MetricKey = "sleep" | "activity" | "nutrition" | "hydration"
+export default function AiInsightsPanel() {
+  const [chatInput, setChatInput] = useState("")
+  const [chatMessages, setChatMessages] = useState([
+    { role: "assistant", content: "Hello! I'm your health assistant. How can I help you today?" },
+  ])
 
-const baseData = {
-  sleep: {
-    current: 7,
-    min: 5,
-    max: 10,
-    step: 0.5,
-    unit: "hours",
-    impact: { readiness: 0.8, hrv: 0.6, recovery: 0.7 },
-  },
-  activity: {
-    current: 8000,
-    min: 4000,
-    max: 15000,
-    step: 1000,
-    unit: "steps",
-    impact: { readiness: 0.4, hrv: 0.3, recovery: 0.5 },
-  },
-  nutrition: {
-    current: 2200,
-    min: 1500,
-    max: 3000,
-    step: 100,
-    unit: "calories",
-    impact: { readiness: 0.3, hrv: 0.2, recovery: 0.4 },
-  },
-  hydration: {
-    current: 2.5,
-    min: 1,
-    max: 5,
-    step: 0.5,
-    unit: "liters",
-    impact: { readiness: 0.5, hrv: 0.4, recovery: 0.3 },
-  },
-}
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!chatInput.trim()) return
 
-const baseScores = {
-  readiness: 72,
-  hrv: 45,
-  recovery: 68,
-}
+    const newMessages = [...chatMessages, { role: "user", content: chatInput }]
+    setChatMessages(newMessages)
+    setChatInput("")
 
-export default function InteractiveForecasting() {
-  const [activeTab, setActiveTab] = useState<MetricKey>("sleep")
-  const [sliderValue, setSliderValue] = useState(baseData.sleep.current)
-  const [forecastData, setForecastData] = useState<any[]>([])
-  const [aiInsight, setAiInsight] = useState<string>("")
-  const [loading, setLoading] = useState<boolean>(false)
-  const [insightHistory, setInsightHistory] = useState<string[]>([])
-
-  const currentMetric = baseData[activeTab]
-
-  useEffect(() => {
-    const currentValue = sliderValue
-    const baseValue = currentMetric.current
-    const percentChange = (currentValue - baseValue) / (currentMetric.max - currentMetric.min)
-
-    const readinessImpact = Math.round(percentChange * currentMetric.impact.readiness * 30)
-    const hrvImpact = Math.round(percentChange * currentMetric.impact.hrv * 20)
-    const recoveryImpact = Math.round(percentChange * currentMetric.impact.recovery * 25)
-
-    const newForecastData = Array.from({ length: 6 }, (_, i) => {
-      const factor = i === 0 ? 0 : i * 0.2
-      return {
-        day: i === 0 ? "Current" : `Day ${i}`,
-        readiness: baseScores.readiness + readinessImpact * factor,
-        hrv: baseScores.hrv + hrvImpact * factor,
-        recovery: baseScores.recovery + recoveryImpact * factor,
-      }
-    })
-
-    setForecastData(newForecastData)
-  }, [activeTab, sliderValue])
-
-  const handleGenerateInsight = async () => {
-    setLoading(true)
-    const payload = {
-      sleepScore: activeTab === "sleep" ? sliderValue : baseData.sleep.current,
-      hrv: activeTab === "hrv" ? sliderValue : baseScores.hrv,
-      restingHR: baseScores.recovery,
-      steps: activeTab === "activity" ? sliderValue : baseData.activity.current,
-      hydration: activeTab === "hydration" ? sliderValue : baseData.hydration.current,
-    }
+    setChatMessages([
+      ...newMessages,
+      { role: "assistant", content: "Analyzing your health data..." },
+    ])
 
     try {
-      const response = await fetchGeminiInsights(payload)
-      setAiInsight(response)
+      // Dynamically fetch the user's health context
+      const userHealthContext = await getUserHealthContext("mock-user-id")
 
-      setInsightHistory(prev => {
-        const updated = [response, ...prev]
-        return updated.slice(0, 5)
-      })
+      // Pass the user input and context to the LLM
+      const response = await askGeminiWithContext(chatInput, userHealthContext)
+
+      setChatMessages([
+        ...newMessages,
+        { role: "assistant", content: response },
+      ])
     } catch (error) {
-      console.error("Insight error:", error)
-      setAiInsight("We couldn't generate an insight right now.")
-    } finally {
-      setLoading(false)
+      console.error("Error fetching response from Gemini API:", error)
+      setChatMessages([
+        ...newMessages,
+        {
+          role: "assistant",
+          content: "Sorry, I couldn't process your request. Please try again later.",
+        },
+      ])
     }
   }
 
   return (
-    <Card className="col-span-full">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Interactive Forecasting</CardTitle>
-        </div>
-        <CardDescription>Explore how changes in one metric affect others</CardDescription>
-      </CardHeader>
+    <div className="grid gap-6 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">AI Insights</h1>
+              <p className="text-muted-foreground">Personalized health insights based on your data</p>
+            </div>
+            <InsightsPreferences />
+          </div>
 
-      <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* LEFT PANEL */}
-          <div className="space-y-6">
-            <Tabs value={activeTab} onValueChange={(val: MetricKey) => {
-              setActiveTab(val)
-              setSliderValue(baseData[val].current)
-            }}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="sleep">Sleep</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
-                <TabsTrigger value="nutrition">Nutrition</TabsTrigger>
-                <TabsTrigger value="hydration">Hydration</TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">All Insights</TabsTrigger>
+              <TabsTrigger value="risks">Risks</TabsTrigger>
+              <TabsTrigger value="trends">Trends</TabsTrigger>
+              <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
+            </TabsList>
 
-            <div className="space-y-4">
-              {/* SLIDER */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-medium">Adjust {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h3>
-                  <span className="text-sm font-bold">{sliderValue} {currentMetric.unit}</span>
+            <TabsContent value="all" className="mt-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <InsightCard type="risk" title="Stress Impact" description="Your data suggests yesterday's stress might be affecting your recovery. Consider a relaxation exercise." icon={AlertTriangle} iconColor="text-amber-500" confidence={80} />
+                <InsightCard type="suggestion" title="Earlier Bedtime" description="Aim for an earlier bedtime tonight to help recover. Your data shows you sleep better when you go to bed before 11pm." icon={BedDouble} iconColor="text-blue-500" />
+                <InsightCard type="trend" title="Hydration Trend" description="You're averaging 1.5L water, below your 3L goal. Try keeping a water bottle at your desk." icon={Droplets} iconColor="text-cyan-500" />
+                <InsightCard type="achievement" title="Step Goal Streak" description="Great job hitting your step goal 5 days in a row! Keep it up for a longer streak." icon={Footprints} iconColor="text-green-500" />
+                <InsightCard type="risk" title="Vitamin D Alert" description="Your recent lab shows Vitamin D at 25 ng/mL, which is below the normal range (30-100 ng/mL). This could affect your immune system and bone health." icon={AlertTriangle} iconColor="text-red-500" confidence={95} />
+                <InsightCard type="trend" title="Heart Rate Improving" description="Your resting heart rate has decreased by 5% compared to last week, indicating improved cardiovascular fitness." icon={Heart} iconColor="text-green-500" />
+                <InsightCard type="suggestion" title="Increase Protein Intake" description="Based on your goals and activity level, consider increasing your protein intake to support muscle recovery." icon={Zap} iconColor="text-purple-500" />
+                <InsightCard type="achievement" title="Meditation Consistency" description="You've meditated for 5 consecutive days. Research shows this can significantly reduce stress levels." icon={Award} iconColor="text-amber-500" />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="risks" className="mt-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <InsightCard type="risk" title="Stress Impact" description="Your data suggests yesterday's stress might be affecting your recovery. Consider a relaxation exercise." icon={AlertTriangle} iconColor="text-amber-500" confidence={80} />
+                <InsightCard type="risk" title="Vitamin D Alert" description="Your recent lab shows Vitamin D at 25 ng/mL, which is below the normal range (30-100 ng/mL). This could affect your immune system and bone health." icon={AlertTriangle} iconColor="text-red-500" confidence={95} />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="trends" className="mt-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <InsightCard type="trend" title="Hydration Trend" description="You're averaging 1.5L water, below your 3L goal. Try keeping a water bottle at your desk." icon={Droplets} iconColor="text-cyan-500" />
+                <InsightCard type="trend" title="Heart Rate Improving" description="Your resting heart rate has decreased by 5% compared to last week, indicating improved cardiovascular fitness." icon={Heart} iconColor="text-green-500" />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="suggestions" className="mt-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <InsightCard type="suggestion" title="Earlier Bedtime" description="Aim for an earlier bedtime tonight to help recover. Your data shows you sleep better when you go to bed before 11pm." icon={BedDouble} iconColor="text-blue-500" />
+                <InsightCard type="suggestion" title="Increase Protein Intake" description="Based on your goals and activity level, consider increasing your protein intake to support muscle recovery." icon={Zap} iconColor="text-purple-500" />
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Morning Briefing</CardTitle>
+              <CardDescription>March 28, 2025</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>
+                Good morning! You slept 7h 15m (reaching 89% of your goal). Your readiness is good – HRV is stable compared to your baseline. Your resting heart rate is 72 bpm, which is 5% lower than last week's average.
+              </p>
+              <div className="mt-4 grid grid-cols-3 gap-4">
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-sm font-medium">Sleep</p>
+                  <p className="text-lg font-bold">7h 15m</p>
+                  <p className="text-xs text-muted-foreground">89% of goal</p>
                 </div>
-                <Slider
-                  value={[sliderValue]}
-                  min={currentMetric.min}
-                  max={currentMetric.max}
-                  step={currentMetric.step}
-                  onValueChange={val => setSliderValue(val[0])}
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{currentMetric.min} {currentMetric.unit}</span>
-                  <span>{currentMetric.max} {currentMetric.unit}</span>
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-sm font-medium">HRV</p>
+                  <p className="text-lg font-bold">45 ms</p>
+                  <p className="text-xs text-muted-foreground">Stable</p>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-sm font-medium">Resting HR</p>
+                  <p className="text-lg font-bold">72 bpm</p>
+                  <p className="text-xs text-green-500">-5% vs last week</p>
                 </div>
               </div>
+            </CardContent>
+            <CardFooter>
+              <p className="text-sm text-muted-foreground">
+                Plan: It's a great day for a workout. Don't forget to log your mood after breakfast.
+              </p>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
 
-              {/* PREDICTED IMPACT */}
-              <div className="rounded-lg border p-4 space-y-2">
-                <h3 className="text-sm font-medium">Predicted Impact</h3>
-                {["readiness", "hrv", "recovery"].map(key => {
-                  const iconMap: any = {
-                    readiness: <Brain className="h-4 w-4 text-primary" />,
-                    hrv: <Heart className="h-4 w-4 text-primary" />,
-                    recovery: <Activity className="h-4 w-4 text-primary" />,
-                  }
-                  const current = Math.round(forecastData[0]?.[key] || 0)
-                  const future = Math.round(forecastData[5]?.[key] || 0)
-                  const delta = future - current
-                  return (
-                    <div key={key}>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-1">
-                          {iconMap[key]}
-                          <span className="text-sm capitalize">{key}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm font-medium">{current}</span>
-                          <ArrowRight className="h-3 w-3" />
-                          <span className="text-sm font-medium">{future}</span>
-                          <span className={`text-xs ${delta >= 0 ? "text-green-500" : "text-red-500"}`}>
-                            {delta >= 0 ? "+" : ""}{delta}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${delta >= 0 ? "bg-green-500" : "bg-red-500"}`}
-                          style={{ width: `${Math.min(100, Math.abs(delta))}%` }}
-                        />
-                      </div>
+      <div>
+        <Card className="h-[calc(100vh-8rem)]">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              AI Assistant
+            </CardTitle>
+            <CardDescription>Ask questions about your health data</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[calc(100vh-16rem)] pr-4">
+              <div className="flex flex-col gap-4">
+                {chatMessages.map((message, index) => (
+                  <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div
+                      className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                      }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
                     </div>
-                  )
-                })}
-              </div>
-
-              {/* INSIGHT GENERATION */}
-              <div className="rounded-lg border p-4 space-y-2">
-                <h3 className="text-sm font-medium">Personalized Recommendation</h3>
-                <Button onClick={handleGenerateInsight} disabled={loading}>
-                  {loading ? "Generating..." : "Generate Insight"}
-                </Button>
-                {aiInsight && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    {aiInsight}
-                    <Button variant="ghost" size="sm" className="ml-2 px-2 py-0.5 text-xs">
-                      <ThumbsUp className="h-3 w-3 mr-1" /> Helpful
-                    </Button>
                   </div>
-                )}
+                ))}
               </div>
-            </div>
-          </div>
-
-          {/* RIGHT PANEL */}
-          <div className="lg:col-span-2">
-            <div className="h-[350px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={forecastData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <ReferenceLine y={70} stroke="#d1d5db" strokeDasharray="3 3" />
-                  <Line type="monotone" dataKey="readiness" stroke="#4f46e5" strokeWidth={2} />
-                  <Line type="monotone" dataKey="hrv" stroke="#ef4444" strokeWidth={2} />
-                  <Line type="monotone" dataKey="recovery" stroke="#10b981" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* LATEST INSIGHTS */}
-            {insightHistory.length > 0 && (
-              <div className="mt-4 border-t pt-4">
-                <h3 className="text-sm font-medium mb-2">Latest Insights</h3>
-                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  {insightHistory.map((insight, idx) => (
-                    <li key={idx}>{insight}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+            </ScrollArea>
+          </CardContent>
+          <CardFooter>
+            <form onSubmit={handleSendMessage} className="flex w-full gap-2">
+              <Input
+                placeholder="Ask about your health data..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="submit" size="icon">
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
   )
 }
