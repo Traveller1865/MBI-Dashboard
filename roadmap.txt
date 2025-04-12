@@ -1,0 +1,113 @@
+# Roadmap for MBI-Dashboard-v2 Development
+
+## Current Priority List and Progress
+
+### 1. Centralized LLM Service
+**Status**: Completed
+- Implemented `gemini-service.ts` to handle interactions with the Gemini API.
+- Added `askGemini` and `askGeminiWithContext` functions for dynamic and contextual responses.
+- **Best Practices**:
+  - Ensure proper error handling for API failures.
+  - Validate API responses to avoid runtime issues.
+  - Use environment variables for sensitive data (e.g., API keys).
+
+### 2. API Route for Gemini Integration
+**Status**: Completed
+- Created `route.ts` under `app/api/gemini/` to handle POST requests to the Gemini API.
+- Integrated the `GoogleGenerativeAI` library for generating responses.
+- **Best Practices**:
+  - Validate the `GEMINI_API_KEY` environment variable at runtime.
+  - Log detailed errors for debugging while keeping user-facing errors generic.
+  - Use fallback mechanisms for missing or invalid API responses.
+
+  ##2.1 Validate API key and intergration
+
+### 3. AI Insights Panel
+**Status**: In Progress
+- Integrated the `askGeminiWithContext` function into the `AiInsightsPanel` component.
+- Dynamically fetches responses from the Gemini API based on user input and health data.
+- **Next Steps**:
+  - Add a loading indicator while waiting for API responses.
+  - Improve the UI for displaying long or multi-part responses.
+  - Cache frequently asked questions to reduce API calls.
+
+### 4. Enhanced Health Insights
+**Status**: Completed
+- Created `gemini-insight-service.ts` to generate personalized health insights based on user metrics.
+- Validates required health metrics before constructing the prompt.
+- **Best Practices**:
+  - Ensure all required metrics are present in the input data.
+  - Use meaningful prompts to maximize the quality of AI-generated insights.
+
+### 5. Fallback Mechanism for LLM
+**Status**: Completed
+- Implemented `llm-service.ts` to handle fallback logic between Gemini and Together LLMs.
+- Automatically switches to Together LLM if Gemini fails.
+- **Best Practices**:
+  - Log fallback events for debugging and monitoring.
+  - Provide user-friendly error messages when both services fail.
+
+### 6. Environment Configuration
+**Status**: Completed
+- Added `GEMINI_API_KEY` to `.env.local` for secure storage of the API key.
+- **Best Practices**:
+  - Never hardcode sensitive information in the codebase.
+  - Use `.env.local` for local development and environment-specific configurations.
+
+---
+
+## Recommendations for Implementation and Best Practices
+
+### General Recommendations
+1. **Error Handling**:
+   - Ensure all API calls have robust error handling.
+   - Log errors with sufficient context for debugging (e.g., input data, API response).
+
+2. **Security**:
+   - Use environment variables for sensitive data like API keys.
+   - Avoid exposing sensitive information in error messages or logs.
+
+3. **Performance Optimization**:
+   - Cache frequently asked questions or common queries to reduce API calls.
+   - Use a debounce mechanism for user input to avoid excessive API requests.
+
+4. **Testing**:
+   - Write unit tests for all service functions (e.g., `askGemini`, `fetchGeminiInsights`).
+   - Test API routes with various inputs to ensure reliability.
+
+5. **User Experience**:
+   - Add a "typing..." indicator or spinner while waiting for API responses.
+   - Handle long responses by splitting them into multiple messages or truncating them.
+
+6. **Monitoring and Logging**:
+   - Monitor API usage and response times to identify bottlenecks.
+   - Log fallback events and errors for better debugging and analytics.
+
+---
+
+## Next Steps
+
+1. **Finalize AI Insights Panel**:
+   - Add a loading indicator and improve the UI for displaying responses.
+   - Test the panel with various user inputs and health data.
+
+2. **Implement Real-Time Notifications**:
+   - Notify users of critical health insights or risks based on AI analysis.
+   - Use push notifications or in-app alerts.
+
+3. **Expand ML Integration**:
+   - Train ML models to predict health risks based on historical data.
+   - Integrate ML predictions into the AI Insights Panel for proactive recommendations.
+
+4. **User Feedback Loop**:
+   - Collect user feedback on AI-generated insights to improve accuracy and relevance.
+   - Use feedback to refine prompts and improve the overall user experience.
+
+5. **Scalability**:
+   - Optimize API routes and services for scalability.
+   - Consider rate-limiting or batching API requests to handle high traffic.
+
+---
+
+## Summary
+The project is progressing well, with key components like the centralized LLM service, API route, and fallback mechanism already implemented. The focus now shifts to finalizing the AI Insights Panel, improving user experience, and expanding ML integration for predictive health insights.

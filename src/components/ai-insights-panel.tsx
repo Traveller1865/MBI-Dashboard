@@ -1,19 +1,27 @@
-/**ai-insights-panel.tsx */
-
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Heart, BedDouble, Footprints, Droplets, AlertTriangle, MessageSquare, Send, Zap, Award } from "lucide-react"
+import {
+  Heart,
+  BedDouble,
+  Footprints,
+  Droplets,
+  AlertTriangle,
+  MessageSquare,
+  Send,
+  Zap,
+  Award,
+} from "lucide-react"
 import InsightCard from "@/components/insight-card"
-
-import { askGemini } from "@/lib/gemini-service" // ✅ Gemini import
+import { InsightsPreferences } from "@/components/insights-preferences"
+import { askGeminiWithContext } from "@/lib/gemini-service"
+import { getUserHealthContext } from "@/lib/getUserHealthContext" // Import the utility
 
 export default function AiInsightsPanel() {
   const [chatInput, setChatInput] = useState("")
@@ -21,7 +29,6 @@ export default function AiInsightsPanel() {
     { role: "assistant", content: "Hello! I'm your health assistant. How can I help you today?" },
   ])
 
-  // ✅ Gemini-connected handler
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!chatInput.trim()) return
@@ -30,37 +37,29 @@ export default function AiInsightsPanel() {
     setChatMessages(newMessages)
     setChatInput("")
 
-    // Show placeholder while Gemini responds
     setChatMessages([
       ...newMessages,
-      { role: "assistant", content: "Thinking..." },
+      { role: "assistant", content: "Analyzing your health data..." },
     ])
 
     try {
-      const reply = await askGemini(`
-        You are a health and wellness assistant. 
-        Based on the following recent data and the user's question, provide a helpful, personalized response.
-        
-        Health Metrics:
-        - Resting HR: 72 bpm (down 5%)
-        - HRV: 45 ms (stable)
-        - Sleep: 7h 15m (89% of goal)
-        - Vitamin D: 25 ng/mL (low)
+      // Dynamically fetch the user's health context
+      const userHealthContext = await getUserHealthContext("mock-user-id")
 
-        Question: "${chatInput}"
-      `)
+      // Pass the user input and context to the LLM
+      const response = await askGeminiWithContext(chatInput, userHealthContext)
 
       setChatMessages([
         ...newMessages,
-        { role: "assistant", content: reply },
+        { role: "assistant", content: response },
       ])
     } catch (error) {
-      console.error("Gemini error:", error)
+      console.error("Error fetching response from Gemini API:", error)
       setChatMessages([
         ...newMessages,
         {
           role: "assistant",
-          content: "I'm having trouble reaching Gemini right now. Please try again later.",
+          content: "Sorry, I couldn't process your request. Please try again later.",
         },
       ])
     }
@@ -70,9 +69,12 @@ export default function AiInsightsPanel() {
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
         <div className="flex flex-col gap-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">AI Insights</h1>
-            <p className="text-muted-foreground">Personalized health insights based on your data</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">AI Insights</h1>
+              <p className="text-muted-foreground">Personalized health insights based on your data</p>
+            </div>
+            <InsightsPreferences />
           </div>
 
           <Tabs defaultValue="all">
@@ -85,123 +87,35 @@ export default function AiInsightsPanel() {
 
             <TabsContent value="all" className="mt-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <InsightCard
-                  type="risk"
-                  title="Stress Impact"
-                  description="Your data suggests yesterday's stress might be affecting your recovery. Consider a relaxation exercise."
-                  icon={AlertTriangle}
-                  iconColor="text-amber-500"
-                  confidence={80}
-                />
-                <InsightCard
-                  type="suggestion"
-                  title="Earlier Bedtime"
-                  description="Aim for an earlier bedtime tonight to help recover. Your data shows you sleep better when you go to bed before 11pm."
-                  icon={BedDouble}
-                  iconColor="text-blue-500"
-                />
-                <InsightCard
-                  type="trend"
-                  title="Hydration Trend"
-                  description="You're averaging 1.5L water, below your 3L goal. Try keeping a water bottle at your desk."
-                  icon={Droplets}
-                  iconColor="text-cyan-500"
-                />
-                <InsightCard
-                  type="achievement"
-                  title="Step Goal Streak"
-                  description="Great job hitting your step goal 5 days in a row! Keep it up for a longer streak."
-                  icon={Footprints}
-                  iconColor="text-green-500"
-                />
-                <InsightCard
-                  type="risk"
-                  title="Vitamin D Alert"
-                  description="Your recent lab shows Vitamin D at 25 ng/mL, which is below the normal range (30-100 ng/mL). This could affect your immune system and bone health."
-                  icon={AlertTriangle}
-                  iconColor="text-red-500"
-                  confidence={95}
-                />
-                <InsightCard
-                  type="trend"
-                  title="Heart Rate Improving"
-                  description="Your resting heart rate has decreased by 5% compared to last week, indicating improved cardiovascular fitness."
-                  icon={Heart}
-                  iconColor="text-green-500"
-                />
-                <InsightCard
-                  type="suggestion"
-                  title="Increase Protein Intake"
-                  description="Based on your goals and activity level, consider increasing your protein intake to support muscle recovery."
-                  icon={Zap}
-                  iconColor="text-purple-500"
-                />
-                <InsightCard
-                  type="achievement"
-                  title="Meditation Consistency"
-                  description="You've meditated for 5 consecutive days. Research shows this can significantly reduce stress levels."
-                  icon={Award}
-                  iconColor="text-amber-500"
-                />
+                <InsightCard type="risk" title="Stress Impact" description="Your data suggests yesterday's stress might be affecting your recovery. Consider a relaxation exercise." icon={AlertTriangle} iconColor="text-amber-500" confidence={80} />
+                <InsightCard type="suggestion" title="Earlier Bedtime" description="Aim for an earlier bedtime tonight to help recover. Your data shows you sleep better when you go to bed before 11pm." icon={BedDouble} iconColor="text-blue-500" />
+                <InsightCard type="trend" title="Hydration Trend" description="You're averaging 1.5L water, below your 3L goal. Try keeping a water bottle at your desk." icon={Droplets} iconColor="text-cyan-500" />
+                <InsightCard type="achievement" title="Step Goal Streak" description="Great job hitting your step goal 5 days in a row! Keep it up for a longer streak." icon={Footprints} iconColor="text-green-500" />
+                <InsightCard type="risk" title="Vitamin D Alert" description="Your recent lab shows Vitamin D at 25 ng/mL, which is below the normal range (30-100 ng/mL). This could affect your immune system and bone health." icon={AlertTriangle} iconColor="text-red-500" confidence={95} />
+                <InsightCard type="trend" title="Heart Rate Improving" description="Your resting heart rate has decreased by 5% compared to last week, indicating improved cardiovascular fitness." icon={Heart} iconColor="text-green-500" />
+                <InsightCard type="suggestion" title="Increase Protein Intake" description="Based on your goals and activity level, consider increasing your protein intake to support muscle recovery." icon={Zap} iconColor="text-purple-500" />
+                <InsightCard type="achievement" title="Meditation Consistency" description="You've meditated for 5 consecutive days. Research shows this can significantly reduce stress levels." icon={Award} iconColor="text-amber-500" />
               </div>
             </TabsContent>
 
             <TabsContent value="risks" className="mt-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <InsightCard
-                  type="risk"
-                  title="Stress Impact"
-                  description="Your data suggests yesterday's stress might be affecting your recovery. Consider a relaxation exercise."
-                  icon={AlertTriangle}
-                  iconColor="text-amber-500"
-                  confidence={80}
-                />
-                <InsightCard
-                  type="risk"
-                  title="Vitamin D Alert"
-                  description="Your recent lab shows Vitamin D at 25 ng/mL, which is below the normal range (30-100 ng/mL). This could affect your immune system and bone health."
-                  icon={AlertTriangle}
-                  iconColor="text-red-500"
-                  confidence={95}
-                />
+                <InsightCard type="risk" title="Stress Impact" description="Your data suggests yesterday's stress might be affecting your recovery. Consider a relaxation exercise." icon={AlertTriangle} iconColor="text-amber-500" confidence={80} />
+                <InsightCard type="risk" title="Vitamin D Alert" description="Your recent lab shows Vitamin D at 25 ng/mL, which is below the normal range (30-100 ng/mL). This could affect your immune system and bone health." icon={AlertTriangle} iconColor="text-red-500" confidence={95} />
               </div>
             </TabsContent>
 
             <TabsContent value="trends" className="mt-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <InsightCard
-                  type="trend"
-                  title="Hydration Trend"
-                  description="You're averaging 1.5L water, below your 3L goal. Try keeping a water bottle at your desk."
-                  icon={Droplets}
-                  iconColor="text-cyan-500"
-                />
-                <InsightCard
-                  type="trend"
-                  title="Heart Rate Improving"
-                  description="Your resting heart rate has decreased by 5% compared to last week, indicating improved cardiovascular fitness."
-                  icon={Heart}
-                  iconColor="text-green-500"
-                />
+                <InsightCard type="trend" title="Hydration Trend" description="You're averaging 1.5L water, below your 3L goal. Try keeping a water bottle at your desk." icon={Droplets} iconColor="text-cyan-500" />
+                <InsightCard type="trend" title="Heart Rate Improving" description="Your resting heart rate has decreased by 5% compared to last week, indicating improved cardiovascular fitness." icon={Heart} iconColor="text-green-500" />
               </div>
             </TabsContent>
 
             <TabsContent value="suggestions" className="mt-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <InsightCard
-                  type="suggestion"
-                  title="Earlier Bedtime"
-                  description="Aim for an earlier bedtime tonight to help recover. Your data shows you sleep better when you go to bed before 11pm."
-                  icon={BedDouble}
-                  iconColor="text-blue-500"
-                />
-                <InsightCard
-                  type="suggestion"
-                  title="Increase Protein Intake"
-                  description="Based on your goals and activity level, consider increasing your protein intake to support muscle recovery."
-                  icon={Zap}
-                  iconColor="text-purple-500"
-                />
+                <InsightCard type="suggestion" title="Earlier Bedtime" description="Aim for an earlier bedtime tonight to help recover. Your data shows you sleep better when you go to bed before 11pm." icon={BedDouble} iconColor="text-blue-500" />
+                <InsightCard type="suggestion" title="Increase Protein Intake" description="Based on your goals and activity level, consider increasing your protein intake to support muscle recovery." icon={Zap} iconColor="text-purple-500" />
               </div>
             </TabsContent>
           </Tabs>
@@ -213,9 +127,7 @@ export default function AiInsightsPanel() {
             </CardHeader>
             <CardContent>
               <p>
-                Good morning! You slept 7h 15m (reaching 89% of your goal). Your readiness is good – HRV is stable
-                compared to your baseline. Your resting heart rate is 72 bpm, which is 5% lower than last weeks
-                average.
+                Good morning! You slept 7h 15m (reaching 89% of your goal). Your readiness is good – HRV is stable compared to your baseline. Your resting heart rate is 72 bpm, which is 5% lower than last week's average.
               </p>
               <div className="mt-4 grid grid-cols-3 gap-4">
                 <div className="rounded-lg border p-3 text-center">
@@ -237,7 +149,7 @@ export default function AiInsightsPanel() {
             </CardContent>
             <CardFooter>
               <p className="text-sm text-muted-foreground">
-                Plan: Its a great day for a workout. Dont forget to log your mood after breakfast.
+                Plan: It's a great day for a workout. Don't forget to log your mood after breakfast.
               </p>
             </CardFooter>
           </Card>

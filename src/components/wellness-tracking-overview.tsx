@@ -12,6 +12,11 @@ import BodyMetricsPanel from "@/components/body-metrics-panel"
 import ActivityMetricsPanel from "@/components/activity-metrics-panel"
 import ReadinessPanel from "@/components/readiness-panel"
 
+// Add imports for our new components at the top of the file
+import CorrelatedMetricsPanel from "@/components/correlated-metrics-panel"
+import EnhancedHeartMetrics from "@/components/enhanced-heart-metrics"
+import InteractiveForecasting from "@/components/interactive-forecasting"
+
 export default function WellnessTrackingOverview() {
   const [timeRange, setTimeRange] = useState("week")
 
@@ -131,6 +136,15 @@ export default function WellnessTrackingOverview() {
           <ReadinessPanel timeRange={timeRange} />
         </TabsContent>
       </Tabs>
+
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-4">Advanced Analytics</h2>
+        <div className="space-y-6">
+          <CorrelatedMetricsPanel timeRange={timeRange} />
+          <EnhancedHeartMetrics timeRange={timeRange} />
+          <InteractiveForecasting />
+        </div>
+      </div>
     </div>
   )
 }
