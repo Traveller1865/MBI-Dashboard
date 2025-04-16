@@ -5,7 +5,7 @@ export async function askGemini(prompt: string): Promise<string> {
     const res = await fetch("/api/gemini", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ text: prompt }),
     });
 
     if (!res.ok) {
@@ -15,7 +15,11 @@ export async function askGemini(prompt: string): Promise<string> {
     const data = await res.json();
     return data.text || "No response text found.";
   } catch (error) {
-    console.error("Client Gemini fetch error:", error.stack || error);
+    if (error instanceof Error) {
+      console.error("Client Gemini fetch error:", error.stack || error.message);
+    } else {
+      console.error("Client Gemini fetch error:", error);
+    }
     return "Sorry, I had trouble processing that.";
   }
 }
