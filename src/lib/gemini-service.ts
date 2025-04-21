@@ -23,10 +23,23 @@ export async function askGemini(prompt: string): Promise<string> {
     return "Sorry, I had trouble processing that.";
   }
 }
+
 export async function askGeminiWithContext(prompt: string, context: string): Promise<string> {
   const fullPrompt = `
     Context: ${context}
     User: ${prompt}
   `;
   return await askGemini(fullPrompt);
+}
+// Updated function to accommodate ongoing chat with history
+export async function askGeminiWithContextAndHistory(prompt: string, context: string, history: Array<{ role: string; content: string }>): Promise<string> {
+    // Combine history, context, and the new prompt into a single payload
+    const messages = [
+      ...history,
+      { role: "system", content: `Context: ${context}` },
+      { role: "user", content: prompt },
+    ];
+
+    return await askGemini(JSON.stringify({messages})
+    );  
 }
