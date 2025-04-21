@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import InsightCard from "@/components/insight-card"
 import { InsightsPreferences } from "@/components/insights-preferences"
-import { askGeminiWithContext } from "@/lib/gemini-service"
+import { askGeminiWithContext, askGeminiWithContextAndHistory } from "@/lib/gemini-service"
 import { getUserHealthContext } from "@/lib/getUserHealthContext" // Import the utility
 
 export default function AiInsightsPanel() {
@@ -47,8 +47,8 @@ export default function AiInsightsPanel() {
       const userHealthContext = await getUserHealthContext("mock-user-id")
 
       // Pass the user input and context to the LLM
-      const response = await askGeminiWithContext(chatInput, userHealthContext)
-
+      //const response = await askGeminiWithContext(chatInput, userHealthContext)
+      const response = await askGeminiWithContextAndHistory(chatInput, userHealthContext, chatMessages)
       setChatMessages([
         ...newMessages,
         { role: "assistant", content: response },

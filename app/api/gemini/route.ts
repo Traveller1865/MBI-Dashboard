@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 //Commenting out your stuff for debugging purposes, you can uncomment it when needed.
 //const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY!);
-const TimgenAI = new GoogleGenAI({ apiKey: "Insert API KEY HERE" }); // Replace with your actual API key or use process.env.GEMINI_API_KEY if set in your environment variables.
+const TimgenAI = new GoogleGenAI({ apiKey: "Insert API Key here" }); // Replace with your actual API key or use process.env.GEMINI_API_KEY if set in your environment variables.
 // Initialize model
 /* api/gemini/route.ts */
 
