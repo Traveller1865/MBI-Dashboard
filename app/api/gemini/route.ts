@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 //Commenting out your stuff for debugging purposes, you can uncomment it when needed.
 //const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY!);
-const TimgenAI = new GoogleGenAI({ apiKey: "Insert API Key here" }); // Replace with your actual API key or use process.env.GEMINI_API_KEY if set in your environment variables.
+const TimgenAI = new GoogleGenAI({ apiKey: "Insert Key Here" }); // Replace with your actual API key or use process.env.GEMINI_API_KEY if set in your environment variables.
 // Initialize model
 /* api/gemini/route.ts */
 
@@ -13,9 +13,6 @@ const TimgenAI = new GoogleGenAI({ apiKey: "Insert API Key here" }); // Replace 
 //  throw new Error("GEMINI_API_KEY is not defined. Please set it in your environment variables.");
 //}
 
-
-//const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // You can change to "gemini-1.5-pro-latest" if needed
-console.log("Endpoint reached: /api/gemini/route.ts");
 export async function POST(req: NextRequest) {
   try {
     

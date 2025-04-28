@@ -1,6 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { LucideIcon } from "lucide-react"
+import { askGeminiWithContext } from "@/lib/gemini-service"
 
 interface InsightCardProps {
   type: "risk" | "trend" | "suggestion" | "achievement" | "anomaly"

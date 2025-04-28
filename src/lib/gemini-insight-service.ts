@@ -21,7 +21,11 @@ export async function fetchGeminiInsights(data: Record<string, any>): Promise<st
   try {
     return await askGemini(prompt);
   } catch (error) {
-    console.error("Error fetching Gemini insights:", error.stack || error);
+    if (error instanceof Error) {
+      console.error("Error fetching Gemini insights:", error.stack || error.message);
+    } else {
+      console.error("Error fetching Gemini insights:", error);
+    }
     return "Unable to generate insights at this time.";
   }
 }
