@@ -25,6 +25,7 @@ import { askGeminiWithContext, askGeminiWithContextAndHistory } from "@/lib/gemi
 import { getUserHealthContext } from "@/lib/getUserHealthContext" // Import the utility
 import {insightCardsConfig} from "@/lib/insightCardsConfig" // Import the insight cards config
 import AiChatbot from "./ai-chatbox"
+import MorningBriefingPanel from "./morning-briefing-panel" // Import the morning briefing panel
 
 export default function AiInsightsPanel() {
     const [descriptions, setDescriptions] = useState<{ [key: string]: string }>({});
@@ -111,39 +112,7 @@ export default function AiInsightsPanel() {
             </TabsContent>
           </Tabs>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Morning Briefing</CardTitle>
-              <CardDescription>March 28, 2025</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>
-                Good morning! You slept 7h 15m (reaching 89% of your goal). Your readiness is good – HRV is stable compared to your baseline. Your resting heart rate is 72 bpm, which is 5% lower than last week's average.
-              </p>
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                <div className="rounded-lg border p-3 text-center">
-                  <p className="text-sm font-medium">Sleep</p>
-                  <p className="text-lg font-bold">7h 15m</p>
-                  <p className="text-xs text-muted-foreground">89% of goal</p>
-                </div>
-                <div className="rounded-lg border p-3 text-center">
-                  <p className="text-sm font-medium">HRV</p>
-                  <p className="text-lg font-bold">45 ms</p>
-                  <p className="text-xs text-muted-foreground">Stable</p>
-                </div>
-                <div className="rounded-lg border p-3 text-center">
-                  <p className="text-sm font-medium">Resting HR</p>
-                  <p className="text-lg font-bold">72 bpm</p>
-                  <p className="text-xs text-green-500">-5% vs last week</p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <p className="text-sm text-muted-foreground">
-                Plan: It's a great day for a workout. Don't forget to log your mood after breakfast.
-              </p>
-            </CardFooter>
-          </Card>
+          <MorningBriefingPanel /> {/* Include the morning briefing panel here */}
         </div>
       </div>
 
