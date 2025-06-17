@@ -1,9 +1,9 @@
 //src/app/api/route.ts
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 //Commenting out your stuff for debugging purposes, you can uncomment it when needed.
-//const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY!);
-const TimgenAI = new GoogleGenAI({ apiKey: "insert key here" }); // Replace with your actual API key or use process.env.GEMINI_API_KEY if set in your environment variables.
+const TimgenAI = new GoogleGenAI({apiKey: GEMINI_API_KEY});
 // Initialize model
 /* api/gemini/route.ts */
 
@@ -29,9 +29,9 @@ export async function POST(req: NextRequest) {
       }
       });
     // Uncomment the above generationConfig if you want to customize the generation parameters});
-    console.log("Gemini API response:", result);
+    //console.log("Gemini API response:", result);
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "No response text found.";
-    console.log(text);
+    //console.log(text);
     return NextResponse.json({ text: text }, { status: 200 });
       }
       catch (err) {
