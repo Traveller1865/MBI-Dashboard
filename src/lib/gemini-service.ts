@@ -39,7 +39,6 @@ export async function askGeminiWithContextAndHistory(prompt: string, context: st
       { role: "system", content: `Context: ${context}` },
       { role: "user", content: prompt },
     ];
-
     return await askGemini(JSON.stringify({messages})
     );  
 }

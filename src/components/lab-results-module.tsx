@@ -15,6 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import RecordUploadDialog from "./records-upload-dialog"
+import MedicalFileManager from "./medical-file-manager"
 
 // Sample data for trend charts
 const vitaminDData = [
@@ -225,9 +227,12 @@ export default function LabResultsModule() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Medical Records</h1>
-        <p className="text-muted-foreground">View and track your lab results over time</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Medical Records</h1>
+          <p className="text-muted-foreground">View and track your lab results over time</p>
+        </div>
+        <RecordUploadDialog />
       </div>
 
       <div className="rounded-lg border bg-card p-4">
@@ -242,6 +247,7 @@ export default function LabResultsModule() {
           <TabsTrigger value="latest">Latest Results</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
+          <TabsTrigger value="files">File Manager</TabsTrigger>
         </TabsList>
 
         <TabsContent value="latest" className="mt-4">
@@ -526,6 +532,9 @@ export default function LabResultsModule() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="files" className="mt-4">
+          <MedicalFileManager />
         </TabsContent>
       </Tabs>
 
