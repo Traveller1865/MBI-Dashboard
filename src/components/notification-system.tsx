@@ -103,9 +103,9 @@ export function NotificationSystem() {
       setShowAlert(true)
 
       // Auto-hide the alert after 5 seconds
-      const hideTimer = setTimeout(() => {
-        setShowAlert(false)
-      }, 5000)
+      //const hideTimer = setTimeout(() => {
+        //setShowAlert(false)
+      //}, 5000)
 
       return () => clearTimeout(hideTimer)
     }, 10000) // Show new notification after 10 seconds
