@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("mongodDB_CONN_STRING")
+}
+
+type MockhealthContextHydration {
+  current Float
+  goal    Int
+}
+
+model MockhealthContext {
+  id             String                     @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt      DateTime                   @db.Date
+  hdl            Int
+  hrv            Int
+  hydration      MockhealthContextHydration
+  ldl            Int
+  meditationDays Int
+  name           String
+  restingHR      Int
+  sleepDuration  String
+  sleepScore     Int
+  stepStreak     Int
+  userId         String?                    @db.ObjectId
+  vitaminD       Int
+}
+
+model User {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  email String
+  hashedPassword String?
+  firstName String
+  lastName String
+  sex String
+  age Int
+}
