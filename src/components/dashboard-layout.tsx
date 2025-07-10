@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { NotificationSystem } from "@/components/notification-system"
 import { Home, BarChart3, FileText, Settings, Menu, Target, Sparkles, Award } from "lucide-react"
+import Login from "./Login"
 
 interface NavItem {
   title: string
@@ -177,6 +178,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-6">
               <div className="ml-auto flex items-center gap-4">
                 <NotificationSystem />
+                <Link href="/login">
+                  <Button variant="outline">Login</Button>
+                </Link>
               </div>
             </header>
           )}
