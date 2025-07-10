@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   LineChart,
@@ -21,6 +22,8 @@ import {
 } from "recharts"
 import { Brain, Activity, Timer, Zap, Wind } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import BoxBreathingModal from "@/components/box-breathing-modal"
+import FourSevenEightModal from "@/components/four-seven-eight-modal"
 
 interface ReadinessPanelProps {
   timeRange: string
@@ -66,6 +69,8 @@ const readinessFactorsData = [
 ]
 
 export default function ReadinessPanel({ timeRange }: ReadinessPanelProps) {
+  const [isModalOpen, setModalOpen] = useState(false)
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Card className="md:col-span-2 lg:col-span-1">
@@ -194,10 +199,13 @@ export default function ReadinessPanel({ timeRange }: ReadinessPanelProps) {
               <p className="mt-2 text-xs text-muted-foreground">
                 Equal inhale, hold, exhale, and hold pattern to reduce stress.
               </p>
-              <button className="mt-2 w-full rounded-md bg-primary px-3 py-1 text-sm text-primary-foreground">
+              <button
+                onClick={() => setModalOpen(true)} 
+                className="mt-2 w-full rounded-md bg-primary px-3 py-1 text-sm text-primary-foreground">
                 Start Session
               </button>
             </div>
+            <BoxBreathingModal open={isModalOpen} onClose={() => setModalOpen(false)} />
 
             <div className="rounded-lg border p-3">
               <div className="flex items-center justify-between">
@@ -212,10 +220,13 @@ export default function ReadinessPanel({ timeRange }: ReadinessPanelProps) {
               <p className="mt-2 text-xs text-muted-foreground">
                 Inhale for 4, hold for 7, exhale for 8 to promote relaxation.
               </p>
-              <button className="mt-2 w-full rounded-md bg-primary px-3 py-1 text-sm text-primary-foreground">
+              <button 
+                onClick={() => setModalOpen(true)} 
+                className="mt-2 w-full rounded-md bg-primary px-3 py-1 text-sm text-primary-foreground">
                 Start Session
               </button>
             </div>
+            <FourSevenEightModal open={isModalOpen} onClose={() => setModalOpen(false)} />
           </div>
         </CardContent>
       </Card>

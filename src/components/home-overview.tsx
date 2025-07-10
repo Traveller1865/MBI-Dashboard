@@ -35,12 +35,17 @@ import {
 
 export default function HomeOverview() {
   const [userName, setUserName] = useState("Sarah")
+  const today = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Hello, {userName}</h1>
-        <p className="text-muted-foreground">Here's your health overview for today, March 28, 2025</p>
+        <p className="text-muted-foreground">Here's your health overview for today, {today}</p>
       </div>
 
       <Card className="w-full">
