@@ -1,5 +1,5 @@
 import * as mongoDB from 'mongodb';
-import { updateHealthData, getHealthData } from './mongodb';
+import { updateHealthData, getHealthData } from '../../../src/lib/mongodb';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
