@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import DashboardLayout from "@/components/dashboard-layout"
 import JournalTracker from "@/components/journal-tracker"
+import { formatDate } from '@/utils/journal'
 
 export const metadata: Metadata = {
   title: "Journal | Mynd Bodi Institute",

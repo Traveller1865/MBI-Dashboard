@@ -22,8 +22,8 @@ import {
 } from "recharts"
 import { Brain, Activity, Timer, Zap, Wind } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
-import BoxBreathingModal from "@/components/box-breathing-modal"
-import FourSevenEightModal from "@/components/four-seven-eight-modal"
+import BoxBreathingModal from "@/components/modals/box-breathing-modal"
+import FourSevenEightModal from "@/components/modals/four-seven-eight-modal"
 
 interface ReadinessPanelProps {
   timeRange: string
